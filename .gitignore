@@ -11,9 +11,18 @@ __pycache__/
 test/seisbench/
 
 # Training checkpoints: keep only the selected best model of every experiment.
-# Epoch snapshots and checkpoints stay on disk but are not committed.
 models/Model_Store/**/*.pth
 !models/Model_Store/**/best_model.pth
+
+# New PyTorch pipeline: checkpoints, logs and rebuildable metadata
+runs/
+results/
+logs/*.log
+data/*.npy
+data/*.csv
+data/*.json
+.cache/
+*.pt
 
 # Scratch / temporary folders
 temp/
