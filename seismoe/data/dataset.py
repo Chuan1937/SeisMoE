@@ -13,11 +13,13 @@ from dataclasses import dataclass
 import numpy as np
 import pandas as pd
 import torch
+from scipy.signal import butter, filtfilt
 from torch.utils.data import Dataset
 
 SAMPLES = 6000
 CHANNELS = 3
 WAVE_BYTES = SAMPLES * CHANNELS * 4
+_BAND = butter(4, [1.0 / 50.0, 45.0 / 50.0], btype="band")
 
 
 @dataclass
@@ -70,6 +72,7 @@ class SteadDataset(Dataset):
         max_traces: int | None = None,
         label_sigma: float = 10.0,
         norm: str = "std",
+        bandpass: bool = False,
     ):
         df = pd.read_csv(manifest) if isinstance(manifest, str) else manifest
         # noise traces are only useful for the auxiliary noise head / hard negatives
@@ -95,6 +98,7 @@ class SteadDataset(Dataset):
         self.seed = seed
         self.label_sigma = label_sigma
         self.norm = norm
+        self.bandpass = bandpass
         self._fd: int | None = None
         self._bank: np.ndarray | None = None
         self._rng: np.random.Generator | None = None
@@ -170,7 +174,10 @@ class SteadDataset(Dataset):
         return x, p, s
 
     def __getitem__(self, idx: int):
-        x = normalize(self._read(idx), self.norm)
+        x = self._read(idx)
+        if self.bandpass:
+            x = filtfilt(_BAND[0], _BAND[1], x, axis=0).astype(np.float32)
+        x = normalize(x, self.norm)
         p = int(self._p[idx])
         s = int(self._s[idx])
         if self.train:

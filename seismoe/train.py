@@ -89,6 +89,16 @@ def parse_args() -> argparse.Namespace:
         default="",
         help="fine-tune on a transfer dataset instead of STEAD",
     )
+    p.add_argument("--multi", action="store_true", help="train one model on all four domains")
+    p.add_argument("--multi-manifest", default="data/multidomain_manifest.csv")
+    p.add_argument("--epoch-size", type=int, default=600_000)
+    p.add_argument("--val-per-dataset", type=int, default=1000)
+    p.add_argument(
+        "--domain-weights",
+        default="stead=0.40,diting=0.50,txed=0.05,instance=0.05",
+    )
+    p.add_argument("--no-bandpass", action="store_true")
+    p.add_argument("--bandpass-domains", default="", help="comma-separated domains to band-pass; empty = all")
     p.add_argument("--amp", choices=["bf16", "fp16", "off"], default="bf16")
     p.add_argument("--channels", default="32,64,96,128,192,256")
     p.add_argument("--dropout", type=float, default=0.1)
@@ -209,7 +219,35 @@ def main() -> None:
     out = Path(args.out)
     out.mkdir(parents=True, exist_ok=True)
 
-    if args.transfer:
+    if args.multi:
+        from .data.multidomain import DomainWeights, MultiDomainDataset
+
+        weights = DomainWeights()
+        for item in args.domain_weights.split(","):
+            name, value = item.split("=")
+            setattr(weights, name.strip(), float(value))
+        train_ds = MultiDomainDataset(
+            args.multi_manifest,
+            split="train",
+            train=True,
+            epoch_size=args.epoch_size,
+            weights=weights,
+            seed=args.seed,
+            label_sigma=args.label_sigma,
+            bandpass=not args.no_bandpass,
+            bandpass_domains=tuple(args.bandpass_domains.split(",")) if args.bandpass_domains else None,
+        )
+        val_ds = MultiDomainDataset(
+            args.multi_manifest,
+            split="val",
+            train=False,
+            val_per_dataset=args.val_per_dataset,
+            seed=args.seed,
+            label_sigma=args.label_sigma,
+            bandpass=not args.no_bandpass,
+            bandpass_domains=tuple(args.bandpass_domains.split(",")) if args.bandpass_domains else None,
+        )
+    elif args.transfer:
         from .transfer import TransferDataset, load_transfer
 
         spec = TRANSFER_SPECS[args.transfer]

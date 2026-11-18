@@ -11,7 +11,7 @@ HERE = pathlib.Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 sys.path.insert(0, str(HERE.parent))
 
-modules = ["test_model", "test_data_eval", "test_transfer"]
+modules = ["test_model", "test_data_eval", "test_transfer", "test_multidomain"]
 failed = 0
 for name in modules:
     module = importlib.import_module(name)

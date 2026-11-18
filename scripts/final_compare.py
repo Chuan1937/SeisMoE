@@ -45,8 +45,8 @@ CONFIGS = [
 GRID = (0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6)
 
 
-def probabilities(model, kind, df, device, batch, workers, norm):
-    ds = SteadDataset(df, train=False, norm=norm)
+def probabilities(model, kind, df, device, batch, workers, norm, bandpass=False):
+    ds = SteadDataset(df, train=False, norm=norm, bandpass=bandpass)
     loader = DataLoader(
         ds,
         batch_size=batch,
@@ -67,6 +67,7 @@ def main() -> None:
     parser.add_argument("--batch", type=int, default=128)
     parser.add_argument("--workers", type=int, default=8)
     parser.add_argument("--out", default="results/final")
+    parser.add_argument("--bandpass", action="store_true")
     parser.add_argument(
         "--models",
         default="seismoe,phasenet-original,phasenet-stead,eqtransformer-original,eqtransformer-stead",
@@ -94,7 +95,7 @@ def main() -> None:
         ns = SimpleNamespace(model=model_name, ckpt=args.ckpt, weights=weights)
         model, kind = load_model(ns, device)
 
-        p, s, n, ds = probabilities(model, kind, val, device, args.batch, args.workers, norm)
+        p, s, n, ds = probabilities(model, kind, val, device, args.batch, args.workers, norm, args.bandpass)
         best = sweep_thresholds(
             p, s, ds._p, ds._s, ds._p <= 0, tolerance=50, thresholds=GRID
         )
@@ -103,7 +104,7 @@ def main() -> None:
             f"P50={best['P_f1']:.4f} S50={best['S_f1']:.4f}"
         )
 
-        p, s, n, ds = probabilities(model, kind, test, device, args.batch, args.workers, norm)
+        p, s, n, ds = probabilities(model, kind, test, device, args.batch, args.workers, norm, args.bandpass)
         result = evaluate_picks(
             p, s, ds._p, ds._s, ds._p <= 0, best["thr_p"], best["thr_s"]
         )

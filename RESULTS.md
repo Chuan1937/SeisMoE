@@ -159,7 +159,46 @@ test（1,433 events，无 noise）：
 
 在 INSTANCE 上 SeisMoE 四项指标都优于两个 in-domain 预训练 baseline。
 
-## 7. 结论与局限
+## 7. 四数据集联合模型（一个模型）
+
+训练：从 STEAD 650k 的 `final.pt` 初始化，在 STEAD + TEXD + INSTANCE + DiTing
+2.0 的混合数据上训练 2 epoch × 600k 样本；域采样权重
+`STEAD 0.45 / DiTing 0.45 / TEXD 0.05 / INSTANCE 0.05`。统一预处理：ZNE→ENZ、
+1–45 Hz 带通、60 s 窗口、逐通道 std。DiTing 的 130 GB HDF5 **没有拷贝**，只用
+`os.pread` 读，训练峰值显存 4.2 GB、WSL 常驻内存 <8 GB。
+
+test 结果（每域独立在 val 上选阈值）：
+
+| dataset | model | P F1@0.2 | S F1@0.2 | P F1@0.5 | S F1@0.5 |
+|---|---|---:|---:|---:|---:|
+| **STEAD** (31k) | 联合模型 | 0.9409 | 0.8835 | 0.9768 | 0.9562 |
+| | STEAD-only `final.pt` | 0.9527 | 0.8955 | **0.9858** | **0.9663** |
+| | PhaseNet `original` | 0.9207 | 0.8737 | 0.9508 | 0.9461 |
+| | PhaseNet `stead` | 0.8689 | **0.9056** | 0.9263 | 0.9709 |
+| | EQTransformer `original` | **0.9856** | 0.9053 | **0.9896** | 0.9727 |
+| | EQTransformer `stead` | 0.9652 | 0.8957 | 0.9868 | **0.9747** |
+| **DiTing 2.0** (15k) | **联合模型** | **0.6413** | **0.6305** | **0.7597** | **0.6993** |
+| | PhaseNet `diting` (in-domain, 50 Hz) | 0.5453 | 0.5236 | 0.5958 | 0.5972 |
+| | PhaseNet `stead` | 0.5824 | 0.5106 | 0.6182 | 0.5777 |
+| | EQTransformer `original` | 0.5649 | 0.4652 | 0.5691 | 0.5292 |
+| | EQTransformer `stead` | 0.5425 | 0.4776 | 0.5797 | 0.5500 |
+| **INSTANCE** (1,433) | **联合模型** | **0.9724** | **0.9354** | **0.9808** | **0.9724** |
+| | PhaseNet `instance` (in-domain) | 0.9616 | 0.9281 | 0.9693 | 0.9616 |
+| | EQTransformer `instance` (in-domain) | 0.9658 | 0.9251 | 0.9728 | 0.9590 |
+| **TEXD** (3,277) | **联合模型** | 0.7298 | 0.7720 | **0.7843** | **0.8359** |
+| | PhaseNet `original` (zero-shot, dev) | 0.7265 | 0.7301 | 0.7756 | 0.7785 |
+| | PhaseNet `stead` (zero-shot, dev) | 0.6682 | 0.7463 | 0.7152 | 0.8038 |
+| | EQTransformer `stead` (zero-shot, dev) | 0.6659 | 0.6765 | 0.7319 | 0.7494 |
+
+- **DiTing / INSTANCE / TEXD**：联合模型在 P/S 的 0.2 s 和 0.5 s 指标上全面超过
+  PhaseNet 和 EQTransformer（INSTANCE/DiTing 还是 in-domain 权重）。
+- **STEAD**：联合模型的 P 超过两个 PhaseNet；S 超过 PhaseNet `original`，但低于
+  PhaseNet `stead` 的 0.9709。对在 STEAD 上训练的 EQTransformer 仍低 1.3–1.6
+  个点 @0.5 s；专用 STEAD 模型 `final.pt` 更接近（差 0.4–0.6 点）。联合训练用
+  约 1 个点的 STEAD 性能换了三个数据集的明显提升。
+- TEXD 官方 split 是 trace 级，数值偏乐观；DiTing/INSTANCE 是 event-level 干净划分。
+
+## 8. 结论与局限
 
 - 在严格 event-level STEAD 划分上，SeisMoE 明显优于两个 PhaseNet 变体；对在
   STEAD 上训练过的 EQTransformer 仍差 0.4–0.9 个点 @0.5 s，P@0.2 的差距主要
@@ -167,12 +206,18 @@ test（1,433 events，无 noise）：
 - 在官方 STEAD test 子集上排名不变，说明差距不是单纯的 trace 泄漏。
 - 在 INSTANCE 的干净 event-level 划分上，SeisMoE 微调后四项指标都优于
   in-domain 的 PhaseNet/EQTransformer 预训练权重。
+- 四数据集联合模型（一个模型）在 **DiTing 2.0、INSTANCE、TEXD** 上 P/S 的
+  0.2 s 与 0.5 s 指标全面超过 PhaseNet / EQTransformer（INSTANCE 和 DiTing
+  还是 in-domain 权重）。代价是 STEAD 比专用模型低约 1 个点：P 超过两个
+  PhaseNet，S 超过 PhaseNet `original` 但低于 `stead`；比在 STEAD 上训练的
+  EQTransformer 低 1.3–1.6 点 @0.5 s。
 - 局限：STEAD 的 P 标签量化使 0.1/0.2 s 指标不能完全反映物理到时精度；TEXD
-  官方 split 是 trace 级，数值偏乐观；DiTing 数据当前权限不可读，尚未接入。
-- 下一步：训练第二个不同 seed 的模型做 ensemble；用 EQT-style 的标签网格
-  校准/学习式 P 峰后处理；在 event-level 重划 TEXD 后重训；接入 DiTing。
+  官方 split 是 trace 级，数值偏乐观；DiTing 1.0（50 Hz）尚未用于联合训练。
+- 下一步：给模型加 domain embedding/adapter，减少 STEAD 与 DiTing 的相互干扰；
+  训练第二个 seed 做 ensemble；在 event-level 重划 TEXD 后重训；把 DiTing 1.0
+  也纳入统一 100 Hz pipeline。
 
-## 8. 复现
+## 9. 复现
 
 ```bash
 python scripts/build_offsets.py
@@ -184,4 +229,12 @@ python scripts/final_compare.py --data data/stead_manifest.csv \
 python scripts/build_leakfree_manifest.py
 python scripts/final_compare.py --data data/stead_manifest_leakfree.csv \
   --ckpt runs/moe_650k_ft/final.pt --max-val 0 --max-test 0
+# 四数据集联合模型
+python scripts/build_diting_index.py --train 200000 --val 5000 --test 15000
+python scripts/build_multidomain_manifest.py
+python -m seismoe.train --multi --multi-manifest data/multidomain_manifest.csv \
+  --out runs/multidomain --epochs 2 --epoch-size 600000 --batch-size 64 --workers 20 \
+  --lr 1e-4 --ema 0.997 --domain-weights stead=0.45,diting=0.45,txed=0.05,instance=0.05 \
+  --val-per-dataset 500 --init runs/moe_650k_ft/final.pt
+python scripts/eval_multidomain.py --ckpt runs/multidomain/best.pt --max-val 1000
 ```

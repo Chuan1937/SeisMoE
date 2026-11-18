@@ -9,7 +9,8 @@
 ```text
 seismoe/
 ├── data/
-│   └── dataset.py       # pread 读波形 + 归一化 + 数据增强 + 高斯标签
+│   ├── dataset.py       # pread 读波形 + 归一化 + 数据增强 + 高斯标签
+│   └── multidomain.py   # 四数据集统一 manifest + 域加权采样 + 带通
 ├── models/
 │   ├── moe.py           # top-k 稀疏 MoE + shared expert + load balancing
 │   └── seismoe.py       # 残差 U-Net + bottleneck Transformer/MoE
@@ -18,11 +19,15 @@ seismoe/
 ├── transfer.py          # TEXD/INSTANCE bucket 读取、微调 Dataset、迁移评估
 └── eval.py              # 峰值检测与 TP/FP/FN/F1/MAE
 scripts/
-├── build_offsets.py     # 一次扫描生成 HDF5 字节偏移索引（只存元数据）
+├── build_offsets.py     # STEAD 字节偏移索引（只存元数据）
 ├── build_manifest.py    # 偏移 + 标签 + 按 source_id 的事件级划分
-├── build_leakfree_manifest.py  # 只保留官方 STEAD test trace（泄漏检查）
+├── build_diting_index.py        # DiTing 2.0 偏移索引（事件级划分）
+├── build_multidomain_manifest.py # 四数据集统一 manifest
+├── build_leakfree_manifest.py   # 只保留官方 STEAD test trace（泄漏检查）
 ├── final_compare.py     # SeisMoE / PhaseNet / EQTransformer 同划分、同 trace 对比
 ├── transfer_eval.py     # TEXD / INSTANCE 的零样本与微调后评估
+├── eval_multidomain.py  # 联合模型逐数据集评估
+├── eval_diting_baselines.py     # DiTing 上的 PhaseNet/EQTransformer 基线
 └── label_onset_check.py # 检验 P 误差是否来自整秒标签（AIC 起跳点）
 tests/                   # 模型/数据/评估的快速单测
 ```
@@ -140,6 +145,13 @@ SeisMoE 的 P 明显超过两个 PhaseNet；对在 STEAD 上训练过的 EQTrans
 | PhaseNet `instance` | 0.956 | 0.929 | 0.964 | 0.962 |
 | EQTransformer `instance` | 0.961 | 0.924 | 0.971 | 0.960 |
 
+**一个模型、四个数据集**：`runs/multidomain/best.pt`（STEAD + TEXD + INSTANCE +
+DiTing 2.0，2 epoch × 600k 混合采样）在 **DiTing / INSTANCE / TEXD** 上的
+P/S F1@0.2 与 @0.5 全部超过 PhaseNet 和 EQTransformer（DiTing/INSTANCE 是
+in-domain 权重）；STEAD 上 P 超过两个 PhaseNet，但 S 低于 PhaseNet `stead`，
+对在 STEAD 上训练的 EQTransformer 还差约 1.3–1.6 个点。完整表见
+[`RESULTS.md`](RESULTS.md)。
+
 ## 4. 扩展到其他数据集（TEXD / INSTANCE）
 
 TEXD 与 INSTANCE 的 HDF5 是 bucket 布局（`f['data'][bucket][index]`，`(3,T)`，
@@ -173,7 +185,47 @@ PhaseNet `instance`（0.964/0.962）和 EQTransformer `instance`（0.971/0.960�
 注意：STEAD 的 P 标签有 77% 是整秒（100 采样点）量化的，因此 0.2 s 容差下
 “预测物理到时”的模型会被“背下量化标签”的模型压过；详见 `RESULTS.md`。
 
-## 5. 历史代码
+## 5. 四数据集联合训练（STEAD + TEXD + INSTANCE + DiTing）
+
+DiTing 2.0 位于 `/mnt/d/AI_Seismic_Data/谛听2.0/`（130 GB natural + 5.8 GB noise，
+100 Hz，ZNE，变量长 `(T,3)` int32）。**不拷贝数据**：先用 h5py 多进程解析每条
+trace 的字节偏移，存成 CSV；训练时用 `os.pread` 直读。WSL 上 20 个 worker +
+`pread`，常驻内存只有 manifest（约 1 GB）和每批波形，不会把 130 GB 读进 RAM。
+
+```bash
+# 1) DiTing 偏移索引（事件级 80/10/10 划分，默认 20 万 train）
+python scripts/build_diting_index.py --train 200000 --val 5000 --test 15000
+
+# 2) 四个数据集合成统一 manifest（STEAD/TEXD/INSTANCE 的 offset 也在这一步算好）
+python scripts/build_multidomain_manifest.py
+
+# 3) 一个模型联合训练：STEAD/DiTing 各 45%，TEXD/INSTANCE 各 5%
+python -m seismoe.train --multi --multi-manifest data/multidomain_manifest.csv \
+  --out runs/multidomain --epochs 2 --epoch-size 600000 \
+  --batch-size 64 --workers 20 --lr 1e-4 --ema 0.997 \
+  --domain-weights stead=0.45,diting=0.45,txed=0.05,instance=0.05 \
+  --channels 32,64,96,128,192,256 --moe-layers 2 --experts 8 \
+  --top-k 2 --expert-hidden 512 --dropout 0.1 \
+  --val-per-dataset 500 --val-thr 0.1 \
+  --init runs/moe_650k_ft/final.pt
+
+# 4) 每个数据集单独选阈值 + 测试
+python scripts/eval_multidomain.py --ckpt runs/multidomain/best.pt \
+  --max-val 1000 --out results/multidomain
+
+# DiTing 基线（PhaseNet diting 50 Hz / PhaseNet original / EQTransformer）
+python scripts/eval_diting_baselines.py --max-val 1000 --max-test 2000
+```
+
+统一预处理：ZNE→ENZ、1–45 Hz 零相位带通（去掉 DiTing 的巨大低频漂移）、
+P 前 5 s 的 60 s 窗口、逐通道标准化；STEAD 的 P 标签整秒量化问题仍存在，
+详见 `RESULTS.md`。
+
+DiTing 文件权限：如果显示 `----------`，在 WSL 里 `chmod -R a+rX` 即可
+（文件 owner 是当前用户，不需要 sudo/密码）。`scripts/build_diting_index.py`
+用 12 进程解析 22 万条 trace 约 8 分钟，之后 `pread` 训练。
+
+## 6. 历史代码
 
 - `src/`：早期 TensorFlow/PyTorch 实验脚本（PhaseNet/EQTransformer/MoE 推理、
   数据预处理、旧版 MoE 模型 `model_moe_gpt_PS2_CPU.py` 等）。
@@ -181,12 +233,12 @@ PhaseNet `instance`（0.964/0.962）和 EQTransformer `instance`（0.971/0.960�
 - `models/Model_Store/`：旧实验权重（仅 `best_model.pth` 纳入 git）。
 - `benchmark/`：旧推理时间对比实验（已从 git 删除，历史中可恢复）。
 
-## 6. 环境
+## 7. 环境
 
 `conda activate dl`：Python 3.10、PyTorch 2.9.1+cu128、numpy、pandas、scipy、
 h5py、seisbench 0.11.7、obspy。无 TensorFlow 依赖。
 
-## 7. 测试
+## 8. 测试
 
 ```bash
 python tests/run_all.py
