@@ -1,6 +1,0 @@
-/home/yuan/code/seis_pre/Time_compare/seis_Texd_phasenet.py:161: DtypeWarning: Columns (7,10,12,21,22) have mixed types. Specify dtype option on import or set low_memory=False.
-  df = pd.read_csv(input_csv)
-预测数据数量：10000
-  0%|          | 0/5 [00:00<?, ?it/s] 20%|██        | 1/5 [04:47<19:10, 287.58s/it] 40%|████      | 2/5 [04:48<05:56, 118.72s/it] 60%|██████    | 3/5 [04:48<02:09, 64.75s/it]  80%|████████  | 4/5 [04:49<00:39, 39.37s/it]100%|██████████| 5/5 [04:49<00:00, 25.34s/it]100%|██████████| 5/5 [04:53<00:00, 58.70s/it]
-****拾取到的事件数：7418
-结果保存到：/home/yuan/code/seis_pre/Time_compare/Texd_phasenet/picks_moe2.csv

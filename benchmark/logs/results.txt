@@ -1,6 +1,0 @@
-Txed_Eqtransformer: 6.360455751419067
-DiTing_Eqtransformer: 16.623833894729614
-DiTing_PhaseNet: 13.792966604232788
-Txed_phasenet: 5.311728239059448
-DiTing_Moe: FAIL
-Txed_Moe: FAIL

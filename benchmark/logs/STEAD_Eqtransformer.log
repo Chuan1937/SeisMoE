@@ -1,5 +1,0 @@
-/home/yuan/code/seis_pre/Time_compare/seis_stead_Eqtransformer.py:141: DtypeWarning: Columns (7,11,13,14,24,25,26,30,31) have mixed types. Specify dtype option on import or set low_memory=False.
-  df = pd.read_csv(input_csv)
-预测数据数量：100000
-  0%|          | 0/49 [00:00<?, ?it/s]/home/yuan/miniconda3/envs/dl/lib/python3.10/multiprocessing/resource_tracker.py:224: UserWarning: resource_tracker: There appear to be 81 leaked semaphore objects to clean up at shutdown
-  warnings.warn('resource_tracker: There appear to be %d '
