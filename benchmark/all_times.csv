@@ -1,0 +1,13 @@
+数据集,模型,总耗时(s),纯推理(s)
+Txed,EQTrans,6.3,2.8
+Txed,PhaseNet,5.1,0.9
+Txed,MoE,24.2,21.0
+DiTing,EQTrans,FAIL,FAIL
+DiTing,PhaseNet,FAIL,FAIL
+DiTing,MoE,FAIL,FAIL
+Instance,EQTrans,433.1,36.6
+Instance,PhaseNet,71.1,13.4
+Instance,MoE,206.4,197.5
+STEAD,EQTrans,FAIL,FAIL
+STEAD,PhaseNet,FAIL,FAIL
+STEAD,MoE,FAIL,FAIL

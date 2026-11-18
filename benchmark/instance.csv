@@ -1,0 +1,4 @@
+模型,总耗时(s)
+EQTransformer,433.2
+PhaseNet,71.1
+MoE,206.4

@@ -1,0 +1,14 @@
+{
+  "Txed_Eqtransformer": 11.9,
+  "Txed_PhaseNet": 10.63,
+  "Txed_MoE": 11.900211095809937,
+  "Instance_Eqtransformer": 11.900211095809937,
+  "Instance_PhaseNet": 11.900211095809937,
+  "Instance_MoE": 11.900211095809937,
+  "DiTing_Eqtransformer": 11.900211095809937,
+  "DiTing_PhaseNet": 11.900211095809937,
+  "DiTing_MoE": 11.900211095809937,
+  "STEAD_Eqtransformer": 11.900211095809937,
+  "STEAD_PhaseNet": 11.900211095809937,
+  "STEAD_MoE": 11.900211095809937
+}

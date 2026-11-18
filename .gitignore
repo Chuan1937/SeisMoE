@@ -1,0 +1,20 @@
+# Python caches
+__pycache__/
+*.py[cod]
+.ipynb_checkpoints/
+
+# Editors / OS
+.vscode/
+.DS_Store
+
+# Third-party source checkout (installed separately, not part of this project)
+test/seisbench/
+
+# Training checkpoints: keep only the selected best model of every experiment.
+# Epoch snapshots and checkpoints stay on disk but are not committed.
+models/Model_Store/**/*.pth
+!models/Model_Store/**/best_model.pth
+
+# Scratch / temporary folders
+temp/
+seisbench_cloudlab/

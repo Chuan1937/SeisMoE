@@ -1,0 +1,194 @@
+/home/yuan/code/seis_pre/Time_compare/run_benchmark.py:121: DtypeWarning: Columns (7,10,12,21,22) have mixed types. Specify dtype option on import or set low_memory=False.
+  df = pd.read_csv(input_csv)
+
+============================================================
+运行: Txed_EQTransformer
+数据: /mnt/d/AI_Seismic_Data/txed/Texd.csv
+模型: eqtransformer
+============================================================
+样本数量: 10000
+使用设备: cuda
+推理:   0%|          | 0/10 [00:00<?, ?it/s]推理:  10%|█         | 1/10 [00:03<00:29,  3.31s/it]推理:  20%|██        | 2/10 [00:05<00:22,  2.76s/it]推理:  30%|███       | 3/10 [00:06<00:11,  1.68s/it]推理:  40%|████      | 4/10 [00:06<00:07,  1.18s/it]推理:  50%|█████     | 5/10 [00:06<00:04,  1.11it/s]推理:  60%|██████    | 6/10 [00:07<00:02,  1.35it/s]推理:  70%|███████   | 7/10 [00:07<00:01,  1.59it/s]推理:  80%|████████  | 8/10 [00:08<00:01,  1.80it/s]推理:  90%|█████████ | 9/10 [00:08<00:00,  1.99it/s]推理: 100%|██████████| 10/10 [00:08<00:00,  2.21it/s]推理: 100%|██████████| 10/10 [00:08<00:00,  1.13it/s]
+/home/yuan/code/seis_pre/Time_compare/run_benchmark.py:121: DtypeWarning: Columns (7,10,12,21,22) have mixed types. Specify dtype option on import or set low_memory=False.
+  df = pd.read_csv(input_csv)
+拾取事件: 5178
+运行时间: 8.87 秒
+
+============================================================
+运行: Txed_PhaseNet
+数据: /mnt/d/AI_Seismic_Data/txed/Texd.csv
+模型: phasenet
+============================================================
+样本数量: 10000
+使用设备: cuda
+推理:   0%|          | 0/10 [00:00<?, ?it/s]推理:  10%|█         | 1/10 [00:02<00:25,  2.87s/it]推理:  20%|██        | 2/10 [00:03<00:10,  1.35s/it]推理:  30%|███       | 3/10 [00:03<00:06,  1.15it/s]推理:  40%|████      | 4/10 [00:03<00:03,  1.59it/s]推理:  50%|█████     | 5/10 [00:04<00:03,  1.46it/s]推理:  60%|██████    | 6/10 [00:04<00:02,  1.83it/s]推理:  70%|███████   | 7/10 [00:05<00:01,  2.19it/s]推理:  80%|████████  | 8/10 [00:05<00:00,  2.49it/s]推理:  90%|█████████ | 9/10 [00:05<00:00,  2.16it/s]推理: 100%|██████████| 10/10 [00:06<00:00,  2.67it/s]推理: 100%|██████████| 10/10 [00:06<00:00,  1.63it/s]
+/home/yuan/code/seis_pre/Time_compare/run_benchmark.py:121: DtypeWarning: Columns (7,10,12,21,22) have mixed types. Specify dtype option on import or set low_memory=False.
+  df = pd.read_csv(input_csv)
+/home/yuan/code/seis_pre/Time_compare/run_benchmark.py:121: DtypeWarning: Columns (23,24,26,27) have mixed types. Specify dtype option on import or set low_memory=False.
+  df = pd.read_csv(input_csv)
+拾取事件: 7418
+运行时间: 6.14 秒
+
+============================================================
+运行: Txed_MoE
+数据: /mnt/d/AI_Seismic_Data/txed/Texd.csv
+模型: moe
+============================================================
+样本数量: 10000
+使用设备: cuda
+  *** 失败: No module named 'model_moe_gpt_PS2_CPU'
+
+============================================================
+运行: Instance_EQTransformer
+数据: /mnt/d/AI_Seismic_Data/Instance/INSTANCE.csv
+模型: eqtransformer
+============================================================
+样本数量: 10000
+使用设备: cuda
+推理:   0%|          | 0/10 [00:00<?, ?it/s]推理:   0%|          | 0/10 [01:03<?, ?it/s]
+/home/yuan/code/seis_pre/Time_compare/run_benchmark.py:121: DtypeWarning: Columns (23,24,26,27) have mixed types. Specify dtype option on import or set low_memory=False.
+  df = pd.read_csv(input_csv)
+  *** 失败: 
+
+============================================================
+运行: Instance_PhaseNet
+数据: /mnt/d/AI_Seismic_Data/Instance/INSTANCE.csv
+模型: phasenet
+============================================================
+样本数量: 10000
+使用设备: cuda
+推理:   0%|          | 0/10 [00:00<?, ?it/s]推理:   0%|          | 0/10 [00:25<?, ?it/s]
+/home/yuan/code/seis_pre/Time_compare/run_benchmark.py:121: DtypeWarning: Columns (23,24,26,27) have mixed types. Specify dtype option on import or set low_memory=False.
+  df = pd.read_csv(input_csv)
+  *** 失败: Sizes of tensors must match except in dimension 1. Expected size 750 but got size 1 for tensor number 1 in the list.
+
+============================================================
+运行: Instance_MoE
+数据: /mnt/d/AI_Seismic_Data/Instance/INSTANCE.csv
+模型: moe
+============================================================
+样本数量: 10000
+使用设备: cuda
+  *** 失败: No module named 'model_moe_gpt_PS2_CPU'
+
+============================================================
+运行: DiTing_EQTransformer
+数据: /mnt/d/AI_Seismic_Data/谛听1.0-50HZ/Diting50hz/processed/DiTing330km_part_26_processed.csv
+模型: eqtransformer
+============================================================
+样本数量: 10000
+使用设备: cuda
+推理:   0%|          | 0/10 [00:00<?, ?it/s]推理:   0%|          | 0/10 [01:49<?, ?it/s]
+  *** 失败: 
+
+============================================================
+运行: DiTing_PhaseNet
+数据: /mnt/d/AI_Seismic_Data/谛听1.0-50HZ/Diting50hz/processed/DiTing330km_part_26_processed.csv
+模型: phasenet
+============================================================
+样本数量: 10000
+使用设备: cuda
+推理:   0%|          | 0/10 [00:00<?, ?it/s]推理:   0%|          | 0/10 [00:28<?, ?it/s]
+/home/yuan/code/seis_pre/Time_compare/run_benchmark.py:121: DtypeWarning: Columns (7,11,13,14,24,25,26,30,31) have mixed types. Specify dtype option on import or set low_memory=False.
+  df = pd.read_csv(input_csv)
+  *** 失败: Given groups=1, weight of size [8, 3, 7], expected input[1024, 6000, 3] to have 3 channels, but got 6000 channels instead
+
+============================================================
+运行: DiTing_MoE
+数据: /mnt/d/AI_Seismic_Data/谛听1.0-50HZ/Diting50hz/processed/DiTing330km_part_26_processed.csv
+模型: moe
+============================================================
+样本数量: 10000
+使用设备: cuda
+  *** 失败: No module named 'model_moe_gpt_PS2_CPU'
+
+============================================================
+运行: STEAD_EQTransformer
+数据: /mnt/d/AI_Seismic_Data/STEAD/STEAD.csv
+模型: eqtransformer
+============================================================
+样本数量: 10000
+使用设备: cuda
+推理:   0%|          | 0/10 [00:00<?, ?it/s]推理:   0%|          | 0/10 [00:00<?, ?it/s]
+/home/yuan/code/seis_pre/Time_compare/run_benchmark.py:121: DtypeWarning: Columns (7,11,13,14,24,25,26,30,31) have mixed types. Specify dtype option on import or set low_memory=False.
+  df = pd.read_csv(input_csv)
+  *** 失败: Caught ValueError in DataLoader worker process 0.
+Original Traceback (most recent call last):
+  File "/home/yuan/code/seis_pre/Time_compare/run_benchmark.py", line 47, in __getitem__
+    index = int(trace_name.split('$')[1].split(',')[0].strip())
+IndexError: list index out of range
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/yuan/miniconda3/envs/dl/lib/python3.10/site-packages/torch/utils/data/_utils/worker.py", line 349, in _worker_loop
+    data = fetcher.fetch(index)  # type: ignore[possibly-undefined]
+  File "/home/yuan/miniconda3/envs/dl/lib/python3.10/site-packages/torch/utils/data/_utils/fetch.py", line 52, in fetch
+    data = [self.dataset[idx] for idx in possibly_batched_index]
+  File "/home/yuan/miniconda3/envs/dl/lib/python3.10/site-packages/torch/utils/data/_utils/fetch.py", line 52, in <listcomp>
+    data = [self.dataset[idx] for idx in possibly_batched_index]
+  File "/home/yuan/code/seis_pre/Time_compare/run_benchmark.py", line 49, in __getitem__
+    raise ValueError(f"无效的trace_name格式：'{trace_name}'") from e
+ValueError: 无效的trace_name格式：'BBGB.NC_20141015123814_EV'
+
+
+============================================================
+运行: STEAD_PhaseNet
+数据: /mnt/d/AI_Seismic_Data/STEAD/STEAD.csv
+模型: phasenet
+============================================================
+样本数量: 10000
+使用设备: cuda
+推理:   0%|          | 0/10 [00:00<?, ?it/s]推理:   0%|          | 0/10 [00:00<?, ?it/s]
+/home/yuan/code/seis_pre/Time_compare/run_benchmark.py:121: DtypeWarning: Columns (7,11,13,14,24,25,26,30,31) have mixed types. Specify dtype option on import or set low_memory=False.
+  df = pd.read_csv(input_csv)
+  *** 失败: Caught ValueError in DataLoader worker process 0.
+Original Traceback (most recent call last):
+  File "/home/yuan/code/seis_pre/Time_compare/run_benchmark.py", line 47, in __getitem__
+    index = int(trace_name.split('$')[1].split(',')[0].strip())
+IndexError: list index out of range
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/yuan/miniconda3/envs/dl/lib/python3.10/site-packages/torch/utils/data/_utils/worker.py", line 349, in _worker_loop
+    data = fetcher.fetch(index)  # type: ignore[possibly-undefined]
+  File "/home/yuan/miniconda3/envs/dl/lib/python3.10/site-packages/torch/utils/data/_utils/fetch.py", line 52, in fetch
+    data = [self.dataset[idx] for idx in possibly_batched_index]
+  File "/home/yuan/miniconda3/envs/dl/lib/python3.10/site-packages/torch/utils/data/_utils/fetch.py", line 52, in <listcomp>
+    data = [self.dataset[idx] for idx in possibly_batched_index]
+  File "/home/yuan/code/seis_pre/Time_compare/run_benchmark.py", line 49, in __getitem__
+    raise ValueError(f"无效的trace_name格式：'{trace_name}'") from e
+ValueError: 无效的trace_name格式：'BBGB.NC_20141015123814_EV'
+
+
+============================================================
+运行: STEAD_MoE
+数据: /mnt/d/AI_Seismic_Data/STEAD/STEAD.csv
+模型: moe
+============================================================
+样本数量: 10000
+使用设备: cuda
+  *** 失败: No module named 'model_moe_gpt_PS2_CPU'
+
+# 地震波形拾取模型运行时间对比
+
+## 测试环境
+- **CPU**: 24核 | **内存**: 64GB | **GPU**: 8GB显存
+- **数据量**: 每个数据集10,000条波形
+
+## 运行时间（秒）
+
+| 数据集 | EQTransformer | PhaseNet | MoE |
+|--------|:-----------:|:--------:|:---:|
+| Txed | 8.87 | 6.14 | N/A |
+| Instance | N/A | N/A | N/A |
+| DiTing | N/A | N/A | N/A |
+| STEAD | N/A | N/A | N/A |
+
+## 说明
+- 每个测试使用10,000条随机采样的波形
+- 使用 `torch.cuda.synchronize()` 确保GPU操作完成后再计时
+- 每个测试完成后清除GPU缓存
+- 批处理大小: 1024
+

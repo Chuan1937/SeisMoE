@@ -1,0 +1,27 @@
+========================================
+开始运行所有优化脚本
+系统配置: 64GB内存, 8GB显存
+========================================
+
+========================================
+运行: seis_Texd_Eqtransformer_optimized.py
+开始时间: Mon May 18 01:48:34 PM CST 2026
+========================================
+/home/yuan/code/seis_pre/Time_compare/seis_Texd_Eqtransformer_optimized.py:117: DtypeWarning: Columns (7,10,12,21,22) have mixed types. Specify dtype option on import or set low_memory=False.
+  df = pd.read_csv(input_csv)
+预测数据数量：10000
+使用设备: cuda
+推理中:   0%|          | 0/5 [00:00<?, ?it/s]推理中:  20%|██        | 1/5 [00:06<00:25,  6.29s/it]推理中:  40%|████      | 2/5 [00:07<00:09,  3.05s/it]推理中:  60%|██████    | 3/5 [00:07<00:04,  2.01s/it]推理中:  80%|████████  | 4/5 [00:08<00:01,  1.49s/it]推理中: 100%|██████████| 5/5 [00:09<00:00,  1.19s/it]推理中: 100%|██████████| 5/5 [00:09<00:00,  1.84s/it]
+拾取到的事件数：5178
+结果保存到：/home/yuan/code/seis_pre/Time_compare/Texd_Eqtransformer/picks_moe2.csv
+运行时间: 12.02秒
+完成: seis_Texd_Eqtransformer_optimized.py
+结束时间: Mon May 18 01:48:49 PM CST 2026
+
+========================================
+运行: seis_Texd_phasenet_optimized.py
+开始时间: Mon May 18 01:48:49 PM CST 2026
+========================================
+  File "/home/yuan/code/seis_pre/Time_compare/seis_Texd_phasenet_optimized.py", line 143
+    output = model(data)
+IndentationError: unexpected indent

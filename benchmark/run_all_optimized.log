@@ -1,0 +1,47 @@
+========================================
+运行所有优化脚本
+========================================
+
+运行: seis_Texd_Eqtransformer_optimized.py
+/home/yuan/code/seis_pre/Time_compare/seis_Texd_Eqtransformer_optimized.py:117: DtypeWarning: Columns (7,10,12,21,22) have mixed types. Specify dtype option on import or set low_memory=False.
+  df = pd.read_csv(input_csv)
+预测数据数量：10000
+使用设备: cuda
+推理中:   0%|          | 0/5 [00:00<?, ?it/s]推理中:  20%|██        | 1/5 [00:06<00:26,  6.62s/it]推理中:  40%|████      | 2/5 [00:07<00:09,  3.16s/it]推理中:  60%|██████    | 3/5 [00:08<00:04,  2.02s/it]推理中:  80%|████████  | 4/5 [00:08<00:01,  1.50s/it]推理中: 100%|██████████| 5/5 [00:09<00:00,  1.21s/it]推理中: 100%|██████████| 5/5 [00:09<00:00,  1.88s/it]
+拾取到的事件数：5178
+结果保存到：/home/yuan/code/seis_pre/Time_compare/Texd_Eqtransformer/picks_moe2.csv
+运行时间: 12.59秒
+完成: seis_Texd_Eqtransformer_optimized.py
+
+运行: seis_Texd_phasenet_optimized.py
+/home/yuan/code/seis_pre/Time_compare/seis_Texd_phasenet_optimized.py:117: DtypeWarning: Columns (7,10,12,21,22) have mixed types. Specify dtype option on import or set low_memory=False.
+  df = pd.read_csv(input_csv)
+预测数据数量：10000
+使用设备: cuda
+推理中:   0%|          | 0/5 [00:00<?, ?it/s]推理中:  20%|██        | 1/5 [00:06<00:26,  6.50s/it]推理中:  40%|████      | 2/5 [00:07<00:08,  2.97s/it]推理中:  60%|██████    | 3/5 [00:07<00:03,  1.84s/it]推理中:  80%|████████  | 4/5 [00:08<00:01,  1.32s/it]推理中: 100%|██████████| 5/5 [00:08<00:00,  1.00s/it]推理中: 100%|██████████| 5/5 [00:08<00:00,  1.69s/it]
+拾取到的事件数：7418
+结果保存到：/home/yuan/code/seis_pre/Time_compare/Texd_phasenet/picks_moe2.csv
+运行时间: 11.04秒
+完成: seis_Texd_phasenet_optimized.py
+
+运行: seis_Texd_Moe_optimized.py
+/home/yuan/code/seis_pre/Time_compare/seis_Texd_Moe_optimized.py:119: DtypeWarning: Columns (7,10,12,21,22) have mixed types. Specify dtype option on import or set low_memory=False.
+  df = pd.read_csv(input_csv)
+预测数据数量：10000
+使用设备: cpu
+Traceback (most recent call last):
+  File "/home/yuan/code/seis_pre/Time_compare/seis_Texd_Moe_optimized.py", line 168, in <module>
+    main(
+  File "/home/yuan/code/seis_pre/Time_compare/seis_Texd_Moe_optimized.py", line 137, in main
+    model = IMG1().to(device)
+  File "/home/yuan/code/seis_pre/model_moe_gpt_PS2_CPU.py", line 498, in __init__
+    self.context_dp0 = MoEGlobalContextModule(64, drop_rate, eps=1e-5, moe_config=moe_cfg_64)
+  File "/home/yuan/code/seis_pre/model_moe_gpt_PS2_CPU.py", line 139, in __init__
+    self.flash_attn = TimeMoeAttention(config, layer_idx=0)
+  File "/home/yuan/code/seis_pre/Auxiliary.py", line 926, in __init__
+    self.rotary_emb = TimeMoeRotaryEmbedding(
+  File "/home/yuan/code/seis_pre/Auxiliary.py", line 729, in __init__
+    self.base ** (torch.arange(0, self.dim, 2, dtype=torch.float32, device=self.device) / self.dim))
+  File "/home/yuan/miniconda3/envs/dl/lib/python3.10/site-packages/torch/cuda/__init__.py", line 410, in _lazy_init
+    torch._C._cuda_init()
+RuntimeError: No CUDA GPUs are available
