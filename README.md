@@ -109,7 +109,7 @@ TP 容差同时报告 0.1/0.2/0.5 s。
   └─ 3×1 conv head → P / S / noise logits
 ```
 
-总参数约 7.9 M（dense 变体约 2.65 M）。MoE 只放在 188-token 的 bottleneck：
+总参数约 7.9 M（dense 3 层约 3.7 M，`dense_layers=1` 约 2.65 M）。MoE 只放在 188-token 的 bottleneck：
 此时每个 token 覆盖约 0.32 s，路由是“P 波列 / S 波列 / 噪声”的语义选择，而不是
 局部纹理选择；计算量小、单卡稳定。`--moe-layers 0` 可直接训练同骨干的 dense
 消融：

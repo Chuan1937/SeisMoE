@@ -111,6 +111,22 @@ trace 上仍然很强。但它的 P 输出高度“贴合”STEAD 的整秒标�
 
 第 4–5 epoch 的边际收益 <0.001，提前停止。
 
+### 5.3 MoE vs dense 消融（STEAD）
+
+同骨干、`dense_layers=3 / moe_layers=0`，从零训练 650k × 3 epoch；MoE 为
+7.9M，dense 为 3.7M。val（3,000 条）：
+
+| model | params | P F1@0.5 | S F1@0.5 | P F1@0.2 | S F1@0.2 |
+|---|---:|---:|---:|---:|---:|
+| MoE（1 dense + 2 MoE） | 7.9M | **0.9878** | 0.9683 | **0.9540** | **0.9044** |
+| Dense 3-layer | 3.7M | 0.9862 | **0.9685** | 0.9480 | 0.9014 |
+
+test（dense 12k / MoE 31k）：dense P/S@0.5 = 0.9813/0.9633，P/S@0.2 =
+0.9422/0.8896；MoE 为 0.9858/0.9663 和 0.9527/0.8955。MoE 的优势主要在
+P@0.2（+0.01），S@0.5 基本持平。把 specialist 与 dense 做 0.5/0.5 概率
+ensemble：P/S@0.5 = 0.9843/0.9653，**没有超过 specialist 单独**；dense
+与 specialist 同数据、误差高度相关，ensemble 不解决问题。
+
 ## 6. 扩展到 TEXD / INSTANCE
 
 两个数据集都是 bucket 布局、`(3,T)`、ZNE、100 Hz；`seismoe/transfer.py` 负责
@@ -213,13 +229,15 @@ test 结果（每域独立在 val 上选阈值）：
   in-domain 的 PhaseNet/EQTransformer 预训练权重。
 - 四数据集联合模型（一个模型）在 **DiTing 2.0、INSTANCE、TEXD** 上 P/S 的
   0.2 s 与 0.5 s 指标全面超过 PhaseNet / EQTransformer（INSTANCE 和 DiTing
-  还是 in-domain 权重）。代价是 STEAD 比专用模型低约 1 个点：P 超过两个
-  PhaseNet，S 超过 PhaseNet `original` 但低于 `stead`；比在 STEAD 上训练的
-  EQTransformer 低 1.3–1.6 点 @0.5 s。
+  还是 in-domain 权重）。STEAD 用 STEAD-routed decoder 到 0.9838/0.9617：
+  P 超过两个 PhaseNet，S 超过 PhaseNet `original` 但低于 `stead`；比在 STEAD
+  上训练的 EQTransformer 低 0.6–1.3 点 @0.5 s。
 - 局限：STEAD 的 P 标签量化使 0.1/0.2 s 指标不能完全反映物理到时精度；TEXD
   官方 split 是 trace 级，数值偏乐观；DiTing 1.0（50 Hz）尚未用于联合训练。
-- 下一步：给模型加 domain embedding/adapter，减少 STEAD 与 DiTing 的相互干扰；
-  训练第二个 seed 做 ensemble；在 event-level 重划 TEXD 后重训；把 DiTing 1.0
+- 下一步：domain adapter（STEAD-routed decoder）已经做了；同数据的第二个
+  seed/dense ensemble 增益不足（见 5.3）。要补 STEAD 剩余的 0.6–1.1 个点，
+  需要更大模型、更多独立 STEAD 数据或更强的 P 标签协议对齐，而不是继续堆
+  同分布 ensemble。其他工作：event-level 重划 TEXD 后重训；把 DiTing 1.0
   也纳入统一 100 Hz pipeline。
 
 ## 9. 复现
