@@ -198,6 +198,9 @@ test 结果（每域独立在 val 上选阈值）：
 - `runs/stead_head/best.pt` 在联合模型上冻结共享 backbone，只加训一个 1.03M 的
   STEAD 专用 decoder（`--stead-head`）：STEAD P/S@0.5 从 0.9768/0.9562 提到
   **0.9838/0.9617**，其他三个数据集走原 decoder，结果不变。
+- 进一步解冻 last encoder + context（150k STEAD）没有提升；与 STEAD specialist
+  做概率 ensemble 也只到 P/S@0.5 ≈0.987/0.966，仍低于 EQT 的 0.990/0.973。
+  STEAD 的剩余差距不是靠简单 adapter/ensemble 能补的。
 - TEXD 官方 split 是 trace 级，数值偏乐观；DiTing/INSTANCE 是 event-level 干净划分。
 
 ## 8. 结论与局限
