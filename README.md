@@ -112,7 +112,17 @@ TP 容差同时报告 0.1/0.2/0.5 s。
 总参数约 7.9 M（dense 变体约 2.65 M）。MoE 只放在 188-token 的 bottleneck：
 此时每个 token 覆盖约 0.32 s，路由是“P 波列 / S 波列 / 噪声”的语义选择，而不是
 局部纹理选择；计算量小、单卡稳定。`--moe-layers 0` 可直接训练同骨干的 dense
-消融。
+消融：
+
+```bash
+python -m seismoe.train --data data/stead_manifest.csv --out runs/dense_650k \
+  --epochs 3 --batch-size 64 --workers 20 --max-train 650000 --max-val 3000 \
+  --channels 32,64,96,128,192,256 --dense-layers 3 --moe-layers 0 \
+  --lr 1e-3 --dropout 0.1 --ema 0.997
+# 与 MoE specialist 做概率 ensemble（阈值在 val 上选）
+python scripts/ensemble_stead.py \
+  --ckpts runs/moe_650k_ft/final.pt,runs/dense_650k/best.pt --weights 0.5,0.5
+```
 
 ## 3. 结果（STEAD，event-level 划分）
 
