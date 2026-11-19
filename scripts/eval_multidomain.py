@@ -14,6 +14,7 @@ from torch.utils.data import DataLoader
 from seismoe.data.multidomain import MultiDomainDataset
 from seismoe.eval import evaluate_picks, summarise
 from seismoe.models.seismoe import SeisMoE
+from seismoe.models.routed import SteadRoutedModel
 
 GRID = (0.02, 0.03, 0.05, 0.1, 0.2, 0.3, 0.5)
 
@@ -32,17 +33,20 @@ def build_model(ckpt: str, device):
         expert_hidden=cfg["expert_hidden"],
         aux_weight=cfg["aux_weight"],
     )
+    if state.get("args", {}).get("stead_head"):
+        model = SteadRoutedModel(model)
     model.load_state_dict(state["model"])
     return model.to(device).eval()
 
 
 @torch.no_grad()
-def predict(model, dataset, device, batch=128, workers=6):
+def predict(model, dataset, device, batch=128, workers=6, domain=None):
     loader = DataLoader(dataset, batch_size=batch, shuffle=False, num_workers=workers)
     probs_p, probs_s = [], []
+    routed = isinstance(model, SteadRoutedModel)
     for x, _y in loader:
         with torch.autocast("cuda", dtype=torch.bfloat16, enabled=device.type == "cuda"):
-            logits, _aux = model(x.to(device))
+            logits, _aux = model(x.to(device), domain=domain) if routed and domain is not None else model(x.to(device))
         prob = torch.sigmoid(logits.float())
         probs_p.append(prob[:, 0].cpu().numpy())
         probs_s.append(prob[:, 1].cpu().numpy())
@@ -102,13 +106,16 @@ def main() -> None:
             datasets=[domain],
         )
         print(f"\n=== {domain}: val={len(val)} test={len(test)} ===")
-        p, s = predict(model, val, device, args.batch, args.workers)
+        routed_domain = None
+        if isinstance(model, SteadRoutedModel):
+            routed_domain = 0 if domain == "stead" else 1
+        p, s = predict(model, val, device, args.batch, args.workers, routed_domain)
         best = sweep(p, s, val._p, val._s, val._p <= 0)
         print(
             f"val thr_p={best['thr_p']} thr_s={best['thr_s']} "
             f"P50={best['P']['P_f1']:.4f} S50={best['P']['S_f1']:.4f}"
         )
-        p, s = predict(model, test, device, args.batch, args.workers)
+        p, s = predict(model, test, device, args.batch, args.workers, routed_domain)
         result = evaluate_picks(
             p, s, test._p, test._s, test._p <= 0, best["thr_p"], best["thr_s"]
         )

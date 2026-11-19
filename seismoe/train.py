@@ -90,6 +90,7 @@ def parse_args() -> argparse.Namespace:
         help="fine-tune on a transfer dataset instead of STEAD",
     )
     p.add_argument("--multi", action="store_true", help="train one model on all four domains")
+    p.add_argument("--stead-head", action="store_true", help="train a STEAD-routed decoder on the joint backbone")
     p.add_argument("--multi-manifest", default="data/multidomain_manifest.csv")
     p.add_argument("--epoch-size", type=int, default=600_000)
     p.add_argument("--val-per-dataset", type=int, default=1000)
@@ -219,7 +220,30 @@ def main() -> None:
     out = Path(args.out)
     out.mkdir(parents=True, exist_ok=True)
 
-    if args.multi:
+    if args.stead_head:
+        from .data.multidomain import MultiDomainDataset
+
+        train_ds = MultiDomainDataset(
+            args.multi_manifest,
+            split="train",
+            train=True,
+            epoch_size=args.epoch_size or 650_000,
+            seed=args.seed,
+            label_sigma=args.label_sigma,
+            bandpass=True,
+            datasets=["stead"],
+        )
+        val_ds = MultiDomainDataset(
+            args.multi_manifest,
+            split="val",
+            train=False,
+            val_per_dataset=args.val_per_dataset or 3000,
+            seed=args.seed,
+            label_sigma=args.label_sigma,
+            bandpass=True,
+            datasets=["stead"],
+        )
+    elif args.multi:
         from .data.multidomain import DomainWeights, MultiDomainDataset
 
         weights = DomainWeights()
@@ -312,14 +336,21 @@ def main() -> None:
         top_k=args.top_k,
         expert_hidden=args.expert_hidden,
         aux_weight=args.aux_weight,
-    ).to(device)
-    n_params = sum(p.numel() for p in model.parameters())
-    print(f"model parameters: {n_params/1e6:.2f}M")
+    )
     if args.init:
         ckpt = torch.load(args.init, map_location="cpu", weights_only=False)
         state = ckpt.get("model", ckpt)
         model.load_state_dict(state)
         print(f"initialised weights from {args.init}")
+    if args.stead_head:
+        from .models.routed import SteadRoutedModel
+
+        model = SteadRoutedModel(model)
+        trainable = sum(p.numel() for p in model.parameters() if p.requires_grad)
+        print(f"STEAD decoder parameters: {trainable/1e6:.2f}M (backbone frozen)")
+    model = model.to(device)
+    n_params = sum(p.numel() for p in model.parameters())
+    print(f"model parameters: {n_params/1e6:.2f}M")
 
     decay, no_decay = [], []
     for name, param in model.named_parameters():

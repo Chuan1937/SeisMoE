@@ -220,8 +220,8 @@ class SeisMoE(nn.Module):
                 nn.init.ones_(module.weight)
                 nn.init.zeros_(module.bias)
 
-    def forward(self, x: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
-        """x: [B, 3, T] -> logits [B, 3, T], auxiliary MoE loss."""
+    def encode(self, x: torch.Tensor):
+        """Encode to bottleneck features, skip list and auxiliary MoE loss."""
         h = self.stem(x)
         skips = []
         for i, encoder in enumerate(self.encoders):
@@ -237,11 +237,18 @@ class SeisMoE(nn.Module):
             tokens, layer_aux = layer(tokens)
             aux = aux + layer_aux
         h = tokens.permute(0, 2, 1)
+        return h, skips, aux
 
-        for i, (up, decoder) in enumerate(zip(self.ups, self.decoders)):
+    def decode(self, h, skips, ups, decoders, head) -> torch.Tensor:
+        """Decode bottleneck features with a given decoder/head set."""
+        for i, (up, decoder) in enumerate(zip(ups, decoders)):
             skip = skips[-2 - i]
             h = F.interpolate(h, size=skip.shape[-1], mode="nearest")
             h = up(h)
             h = decoder(torch.cat([h, skip], dim=1))
+        return head(h)
 
-        return self.head(h), aux
+    def forward(self, x: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
+        """x: [B, 3, T] -> logits [B, 3, T], auxiliary MoE loss."""
+        h, skips, aux = self.encode(x)
+        return self.decode(h, skips, self.ups, self.decoders, self.head), aux
