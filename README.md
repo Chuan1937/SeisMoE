@@ -145,11 +145,11 @@ SeisMoE 的 P 明显超过两个 PhaseNet；对在 STEAD 上训练过的 EQTrans
 | PhaseNet `instance` | 0.956 | 0.929 | 0.964 | 0.962 |
 | EQTransformer `instance` | 0.961 | 0.924 | 0.971 | 0.960 |
 
-**一个模型、四个数据集**：`runs/multidomain/best.pt`（STEAD + TEXD + INSTANCE +
-DiTing 2.0，2 epoch × 600k 混合采样）在 **DiTing / INSTANCE / TEXD** 上的
-P/S F1@0.2 与 @0.5 全部超过 PhaseNet 和 EQTransformer（DiTing/INSTANCE 是
-in-domain 权重）；STEAD 上 P 超过两个 PhaseNet，但 S 低于 PhaseNet `stead`，
-对在 STEAD 上训练的 EQTransformer 还差约 1.3–1.6 个点。完整表见
+**一个模型、四个数据集**：`runs/stead_head/best.pt`（联合模型 + STEAD 专用
+decoder）在 **DiTing / INSTANCE / TEXD** 上的 P/S F1@0.2 与 @0.5 全部超过
+PhaseNet 和 EQTransformer（DiTing/INSTANCE 是 in-domain 权重）；STEAD 上
+P/S F1@0.5 = 0.984/0.962，P 超过两个 PhaseNet，S 低于 PhaseNet `stead`，
+对在 STEAD 上训练的 EQTransformer 还差约 0.6–1.3 个点。完整表见
 [`RESULTS.md`](RESULTS.md)。
 
 ## 4. 扩展到其他数据集（TEXD / INSTANCE）
@@ -212,6 +212,15 @@ python -m seismoe.train --multi --multi-manifest data/multidomain_manifest.csv \
 # 4) 每个数据集单独选阈值 + 测试
 python scripts/eval_multidomain.py --ckpt runs/multidomain/best.pt \
   --max-val 1000 --out results/multidomain
+
+# 可选：STEAD 专用 decoder（冻结共享 backbone，只训练 1.03M 参数）
+# 一个 checkpoint 两条 decoder：STEAD 走 domain 0，其余数据集走原 decoder，
+# 因此 TEXD/INSTANCE/DiTing 的结果完全不变。
+python -m seismoe.train --stead-head --multi-manifest data/multidomain_manifest.csv \
+  --out runs/stead_head --epochs 1 --epoch-size 650000 --batch-size 64 --workers 20 \
+  --lr 3e-4 --ema 0.997 --val-per-dataset 3000 \
+  --init runs/multidomain/best.pt
+python scripts/eval_multidomain.py --ckpt runs/stead_head/best.pt --max-val 1000
 
 # DiTing 基线（PhaseNet diting 50 Hz / PhaseNet original / EQTransformer）
 python scripts/eval_diting_baselines.py --max-val 1000 --max-test 2000

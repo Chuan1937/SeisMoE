@@ -91,6 +91,7 @@ def parse_args() -> argparse.Namespace:
     )
     p.add_argument("--multi", action="store_true", help="train one model on all four domains")
     p.add_argument("--stead-head", action="store_true", help="train a STEAD-routed decoder on the joint backbone")
+    p.add_argument("--stead-unfreeze", action="store_true", help="also unfreeze the last encoder stage and context")
     p.add_argument("--multi-manifest", default="data/multidomain_manifest.csv")
     p.add_argument("--epoch-size", type=int, default=600_000)
     p.add_argument("--val-per-dataset", type=int, default=1000)
@@ -337,17 +338,28 @@ def main() -> None:
         expert_hidden=args.expert_hidden,
         aux_weight=args.aux_weight,
     )
+    wrapper_state = None
     if args.init:
         ckpt = torch.load(args.init, map_location="cpu", weights_only=False)
         state = ckpt.get("model", ckpt)
-        model.load_state_dict(state)
-        print(f"initialised weights from {args.init}")
+        if args.stead_head and any(key.startswith("base.") for key in state):
+            wrapper_state = state
+            print(f"initialised routed weights from {args.init}")
+        else:
+            model.load_state_dict(state)
+            print(f"initialised weights from {args.init}")
     if args.stead_head:
         from .models.routed import SteadRoutedModel
 
         model = SteadRoutedModel(model)
+        if wrapper_state is not None:
+            model.load_state_dict(wrapper_state)
+        if args.stead_unfreeze:
+            for module in (model.base.encoders[-1], model.base.downs[-1], model.base.context):
+                for parameter in module.parameters():
+                    parameter.requires_grad_(True)
         trainable = sum(p.numel() for p in model.parameters() if p.requires_grad)
-        print(f"STEAD decoder parameters: {trainable/1e6:.2f}M (backbone frozen)")
+        print(f"STEAD trainable parameters: {trainable/1e6:.2f}M")
     model = model.to(device)
     n_params = sum(p.numel() for p in model.parameters())
     print(f"model parameters: {n_params/1e6:.2f}M")

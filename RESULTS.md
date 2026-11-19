@@ -171,21 +171,21 @@ test 结果（每域独立在 val 上选阈值）：
 
 | dataset | model | P F1@0.2 | S F1@0.2 | P F1@0.5 | S F1@0.5 |
 |---|---|---:|---:|---:|---:|
-| **STEAD** (31k) | 联合模型 | 0.9409 | 0.8835 | 0.9768 | 0.9562 |
+| **STEAD** (31k) | 联合模型（STEAD-routed） | 0.9489 | 0.8880 | 0.9838 | 0.9617 |
 | | STEAD-only `final.pt` | 0.9527 | 0.8955 | **0.9858** | **0.9663** |
 | | PhaseNet `original` | 0.9207 | 0.8737 | 0.9508 | 0.9461 |
 | | PhaseNet `stead` | 0.8689 | **0.9056** | 0.9263 | 0.9709 |
 | | EQTransformer `original` | **0.9856** | 0.9053 | **0.9896** | 0.9727 |
 | | EQTransformer `stead` | 0.9652 | 0.8957 | 0.9868 | **0.9747** |
-| **DiTing 2.0** (15k) | **联合模型** | **0.6413** | **0.6305** | **0.7597** | **0.6993** |
+| **DiTing 2.0** (15k) | **联合模型** | **0.6442** | **0.6309** | **0.7614** | **0.6990** |
 | | PhaseNet `diting` (in-domain, 50 Hz) | 0.5453 | 0.5236 | 0.5958 | 0.5972 |
 | | PhaseNet `stead` | 0.5824 | 0.5106 | 0.6182 | 0.5777 |
 | | EQTransformer `original` | 0.5649 | 0.4652 | 0.5691 | 0.5292 |
 | | EQTransformer `stead` | 0.5425 | 0.4776 | 0.5797 | 0.5500 |
-| **INSTANCE** (1,433) | **联合模型** | **0.9724** | **0.9354** | **0.9808** | **0.9724** |
+| **INSTANCE** (1,433) | **联合模型** | **0.9717** | **0.9347** | **0.9808** | **0.9717** |
 | | PhaseNet `instance` (in-domain) | 0.9616 | 0.9281 | 0.9693 | 0.9616 |
 | | EQTransformer `instance` (in-domain) | 0.9658 | 0.9251 | 0.9728 | 0.9590 |
-| **TEXD** (3,277) | **联合模型** | 0.7298 | 0.7720 | **0.7843** | **0.8359** |
+| **TEXD** (3,277) | **联合模型** | 0.7297 | 0.7711 | **0.7839** | **0.8352** |
 | | PhaseNet `original` (zero-shot, dev) | 0.7265 | 0.7301 | 0.7756 | 0.7785 |
 | | PhaseNet `stead` (zero-shot, dev) | 0.6682 | 0.7463 | 0.7152 | 0.8038 |
 | | EQTransformer `stead` (zero-shot, dev) | 0.6659 | 0.6765 | 0.7319 | 0.7494 |
@@ -193,9 +193,11 @@ test 结果（每域独立在 val 上选阈值）：
 - **DiTing / INSTANCE / TEXD**：联合模型在 P/S 的 0.2 s 和 0.5 s 指标上全面超过
   PhaseNet 和 EQTransformer（INSTANCE/DiTing 还是 in-domain 权重）。
 - **STEAD**：联合模型的 P 超过两个 PhaseNet；S 超过 PhaseNet `original`，但低于
-  PhaseNet `stead` 的 0.9709。对在 STEAD 上训练的 EQTransformer 仍低 1.3–1.6
-  个点 @0.5 s；专用 STEAD 模型 `final.pt` 更接近（差 0.4–0.6 点）。联合训练用
-  约 1 个点的 STEAD 性能换了三个数据集的明显提升。
+  PhaseNet `stead` 的 0.9709。对在 STEAD 上训练的 EQTransformer 仍低 0.6–1.3
+  个点 @0.5 s；专用 STEAD 模型 `final.pt` 更接近（差 0.4–0.6 点）。
+- `runs/stead_head/best.pt` 在联合模型上冻结共享 backbone，只加训一个 1.03M 的
+  STEAD 专用 decoder（`--stead-head`）：STEAD P/S@0.5 从 0.9768/0.9562 提到
+  **0.9838/0.9617**，其他三个数据集走原 decoder，结果不变。
 - TEXD 官方 split 是 trace 级，数值偏乐观；DiTing/INSTANCE 是 event-level 干净划分。
 
 ## 8. 结论与局限
